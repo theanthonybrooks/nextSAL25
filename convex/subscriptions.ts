@@ -57,51 +57,6 @@ export const getPlanByKey = internalQuery({
   },
 })
 
-// export const getOnboardingCheckoutUrl = action({
-//   handler: async (ctx) => {
-//     const identity = await ctx.auth.getUserIdentity()
-//     if (!identity) {
-//       throw new Error("Not authenticated")
-//     }
-
-//     const user = await ctx.runQuery(api.users.getUserByToken, {
-//       tokenIdentifier: identity.subject,
-//     })
-
-//     if (!user) {
-//       throw new Error("User not found")
-//     }
-
-//     const product = await ctx.runQuery(internal.subscriptions.getPlanByKey, {
-//       key: "basic",
-//     })
-
-//     const price = product?.prices.month?.usd
-
-//     if (!product) {
-//       throw new Error("Plan not found")
-//     }
-//     if (!user.email) {
-//       throw new Error("User email not found")
-//     }
-//     const metadata = {
-//       userId: user.tokenIdentifier,
-//       userEmail: user.email,
-//       tokenIdentifier: identity.subject,
-//       plan: "basic",
-//     }
-
-//     const checkout = await createCheckout({
-//       customerEmail: user.email,
-//       productId: product.polarProductId,
-//       metadata,
-//       successUrl: `${process.env.FRONTEND_URL}/success`,
-//     })
-
-//     return checkout.url
-//   },
-// })
-
 export const getCheckoutUrl = action({
   args: {
     interval: schema.tables.subscriptions.validator.fields.interval,
