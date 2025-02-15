@@ -27,11 +27,14 @@ type PricingCardProps = {
   user: any
   isYearly?: boolean
   title: string
-  monthlyPrice?: number
-  yearlyPrice?: number
+  planKey: string
+  prices: {
+    month?: { usd?: { amount: number } }
+    year?: { usd?: { amount: number } }
+  }
+
   description: string
-  features: string[]
-  actionLabel: string
+  features?: string[]
   popular?: boolean
   exclusive?: boolean
 }
@@ -93,27 +96,25 @@ const PricingCard = ({
   user,
   isYearly,
   title,
-  monthlyPrice,
-  yearlyPrice,
+  planKey,
+  prices,
   description,
   features,
-  actionLabel,
   popular,
   exclusive,
 }: PricingCardProps) => {
   const router = useRouter()
 
-  const getProCheckoutUrl = useAction(
-    api.subscriptions.getProOnboardingCheckoutUrl
-  )
+  const getCheckoutUrl = useAction(api.subscriptions.getCheckoutUrl)
   const subscriptionStatus = useQuery(
     api.subscriptions.getUserSubscriptionStatus
   )
 
   const handleCheckout = async (interval: "month" | "year") => {
     try {
-      const checkoutProUrl = await getProCheckoutUrl({
+      const checkoutProUrl = await getCheckoutUrl({
         interval,
+        planKey,
       })
 
       if (checkoutProUrl) {
@@ -126,11 +127,14 @@ const PricingCard = ({
 
   return (
     <Card
-      className={cn("w-full max-w-sm flex flex-col justify-between px-2 py-1", {
-        "relative border-2 border-blue-500 dark:border-blue-400": popular,
-        "shadow-2xl bg-gradient-to-b from-gray-900 to-gray-800 text-white":
-          exclusive,
-      })}>
+      className={cn(
+        "w-full min-w-[20vw] max-w-sm flex flex-col justify-between px-2 py-1",
+        {
+          "relative border-2 border-blue-500 dark:border-blue-400": popular,
+          "shadow-2xl bg-gradient-to-b from-gray-900 to-gray-800 text-white":
+            exclusive,
+        }
+      )}>
       {popular && (
         <div className='absolute -top-3 left-0 right-0 mx-auto w-fit rounded-full bg-blue-500 dark:bg-blue-400 px-3 py-1'>
           <p className='text-sm font-medium text-white'>Most Popular</p>
@@ -154,7 +158,10 @@ const PricingCard = ({
               className={cn("text-4xl font-bold", {
                 "text-white": exclusive,
               })}>
-              ${isYearly ? yearlyPrice : monthlyPrice}
+              $
+              {isYearly
+                ? (prices.year?.usd?.amount?.toFixed(0) ?? "N/A")
+                : (prices.month?.usd?.amount?.toFixed(0) ?? "N/A")}
             </span>
             <span
               className={cn("text-muted-foreground", {
@@ -165,7 +172,7 @@ const PricingCard = ({
           </div>
 
           <div className='mt-6 space-y-2'>
-            {features.map((feature) => (
+            {features?.map((feature) => (
               <div key={feature} className='flex gap-2'>
                 <CheckCircle2
                   className={cn("h-5 w-5 text-blue-500", {
@@ -197,8 +204,10 @@ const PricingCard = ({
             "bg-blue-500 hover:bg-blue-400": popular,
             "bg-white text-gray-900 hover:bg-gray-100": exclusive,
           })}>
-          {actionLabel}
+          Get {title}
         </Button>
+        {/* <PurchaseLink url='https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_QCYl5Gy5m8wF4dyCyPFLR5PQP83K5hNo2LiSK1fCBTM/redirect' />
+        <PurchaseLink url='https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_cVUP7tMPkExxPfNfa3xYFTQR9q7h2iAguES1j3YBtEH/redirect' /> */}
       </CardFooter>
     </Card>
   )
@@ -213,59 +222,48 @@ export default function Pricing() {
     setIsYearly(parseInt(value) === 1)
   const { user } = useUser()
 
-  const plans = [
-    {
-      title: "Pro",
-      monthlyPrice: 12,
-      yearlyPrice: 100,
-      description: "Advanced features for growing teams and businesses.",
-      features: [
-        "All Basic features",
-        "Up to 20 team members",
-        "50GB storage",
-        "Priority support",
-        "Advanced analytics",
-      ],
-      actionLabel: "Get Pro",
-      popular: true,
-    },
-  ]
+  const plans = useQuery(api.plans.getPlans)
+  if (!plans) return <div>Loading plans...</div>
+
+  if (subscriptionStatus?.hasActiveSubscription) {
+    return (
+      <div className='flex flex-col justify-center items-center w-full mt-[1rem] p-3'>
+        <PricingHeader
+          title='Your Subscription'
+          subtitle='Want to upgrade or cancel your subscription?'
+        />
+        <ExistingSubscription />
+      </div>
+    )
+  }
 
   return (
     <section className='px-4'>
       <div className='max-w-7xl mx-auto'>
-        {!subscriptionStatus?.hasActiveSubscription ? (
-          <>
-            <PricingHeader
-              title='Your Subscription'
-              subtitle='Want to upgrade or cancel your subscription?'
-            />
-            <ExistingSubscription />
-          </>
-        ) : (
-          <>
-            <PricingHeader
-              title='Choose Your Plan'
-              subtitle='Select the perfect plan for your needs. All plans include a 14-day free trial.'
-            />
-            <PricingSwitch onSwitch={togglePricingPeriod} />
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-              className='flex justify-center mt-10'>
-              {plans.map((plan) => (
-                <PricingCard
-                  key={plan.title}
-                  user={user}
-                  {...plan}
-                  isYearly={isYearly}
-                />
-              ))}
-            </motion.div>
-          </>
-        )}
+        <PricingHeader
+          title='Choose Your Plan'
+          subtitle='Select the perfect plan for your needs. All plans include a 14-day free trial.'
+        />
+        <PricingSwitch onSwitch={togglePricingPeriod} />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className='flex justify-center mt-10 gap-3'>
+          {plans.map((plan) => {
+            const { key, ...rest } = plan
+            return (
+              <PricingCard
+                key={plan.title}
+                user={user}
+                planKey={key}
+                {...rest}
+                isYearly={isYearly}
+              />
+            )
+          })}
+        </motion.div>
       </div>
     </section>
   )

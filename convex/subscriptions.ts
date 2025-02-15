@@ -12,12 +12,12 @@ import schema from "./schema"
 
 const createCheckout = async ({
   customerEmail,
-  productPriceId,
+  productId,
   successUrl,
   metadata,
 }: {
   customerEmail: string
-  productPriceId: string
+  productId: string
   successUrl: string
   metadata?: Record<string, string>
 }) => {
@@ -36,7 +36,7 @@ const createCheckout = async ({
   )
 
   const result = await polar.checkouts.custom.create({
-    productPriceId,
+    productId,
     successUrl,
     customerEmail,
     metadata,
@@ -57,54 +57,55 @@ export const getPlanByKey = internalQuery({
   },
 })
 
-export const getOnboardingCheckoutUrl = action({
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Not authenticated")
-    }
+// export const getOnboardingCheckoutUrl = action({
+//   handler: async (ctx) => {
+//     const identity = await ctx.auth.getUserIdentity()
+//     if (!identity) {
+//       throw new Error("Not authenticated")
+//     }
 
-    const user = await ctx.runQuery(api.users.getUserByToken, {
-      tokenIdentifier: identity.subject,
-    })
+//     const user = await ctx.runQuery(api.users.getUserByToken, {
+//       tokenIdentifier: identity.subject,
+//     })
 
-    if (!user) {
-      throw new Error("User not found")
-    }
+//     if (!user) {
+//       throw new Error("User not found")
+//     }
 
-    const product = await ctx.runQuery(internal.subscriptions.getPlanByKey, {
-      key: "basic",
-    })
+//     const product = await ctx.runQuery(internal.subscriptions.getPlanByKey, {
+//       key: "basic",
+//     })
 
-    const price = product?.prices.month?.usd
+//     const price = product?.prices.month?.usd
 
-    if (!price) {
-      throw new Error("Price not found")
-    }
-    if (!user.email) {
-      throw new Error("User email not found")
-    }
-    const metadata = {
-      userId: user.tokenIdentifier,
-      userEmail: user.email,
-      tokenIdentifier: identity.subject,
-      plan: "basic",
-    }
+//     if (!product) {
+//       throw new Error("Plan not found")
+//     }
+//     if (!user.email) {
+//       throw new Error("User email not found")
+//     }
+//     const metadata = {
+//       userId: user.tokenIdentifier,
+//       userEmail: user.email,
+//       tokenIdentifier: identity.subject,
+//       plan: "basic",
+//     }
 
-    const checkout = await createCheckout({
-      customerEmail: user.email,
-      productPriceId: price.polarId,
-      metadata,
-      successUrl: `${process.env.FRONTEND_URL}/success`,
-    })
+//     const checkout = await createCheckout({
+//       customerEmail: user.email,
+//       productId: product.polarProductId,
+//       metadata,
+//       successUrl: `${process.env.FRONTEND_URL}/success`,
+//     })
 
-    return checkout.url
-  },
-})
+//     return checkout.url
+//   },
+// })
 
-export const getProOnboardingCheckoutUrl = action({
+export const getCheckoutUrl = action({
   args: {
     interval: schema.tables.subscriptions.validator.fields.interval,
+    planKey: schema.tables.plans.validator.fields.key,
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
@@ -121,18 +122,11 @@ export const getProOnboardingCheckoutUrl = action({
     }
 
     const product = await ctx.runQuery(internal.subscriptions.getPlanByKey, {
-      key: "basic",
+      key: args.planKey,
     })
 
-    const price =
-      args.interval === "month"
-        ? product?.prices.month?.usd
-        : product?.prices.year?.usd
-
-    console.log("Selected price:", JSON.stringify(price, null, 2))
-
-    if (!price) {
-      throw new Error("Price not found")
+    if (!product) {
+      throw new Error("Plan not found")
     }
     if (!user.email) {
       throw new Error("User email not found")
@@ -142,7 +136,7 @@ export const getProOnboardingCheckoutUrl = action({
       userId: user.tokenIdentifier,
       userEmail: user.email,
       tokenIdentifier: identity.subject,
-      plan: "basic",
+      plan: args.planKey,
     }
 
     if (args.interval) {
@@ -151,7 +145,7 @@ export const getProOnboardingCheckoutUrl = action({
 
     const checkout = await createCheckout({
       customerEmail: user.email,
-      productPriceId: price.polarId,
+      productId: product.polarProductId,
       successUrl: `${process.env.FRONTEND_URL}/success`,
       metadata,
     })

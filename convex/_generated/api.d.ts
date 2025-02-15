@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as api_plans from "../api/plans.js";
+import type * as functions_updateTableColumn from "../functions/updateTableColumn.js";
 import type * as http from "../http.js";
 import type * as plans from "../plans.js";
 import type * as subscriptions from "../subscriptions.js";
@@ -29,6 +30,7 @@ import type * as users from "../users.js";
  */
 declare const fullApi: ApiFromModules<{
   "api/plans": typeof api_plans;
+  "functions/updateTableColumn": typeof functions_updateTableColumn;
   http: typeof http;
   plans: typeof plans;
   subscriptions: typeof subscriptions;
