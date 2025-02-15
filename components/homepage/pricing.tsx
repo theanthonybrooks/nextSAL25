@@ -191,7 +191,7 @@ const PricingCard = ({
               router.push("/sign-in")
               return
             }
-            handleCheckout("month")
+            handleCheckout(isYearly ? "year" : "month")
           }}
           className={cn("w-full", {
             "bg-blue-500 hover:bg-blue-400": popular,
