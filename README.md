@@ -31,6 +31,4 @@ Based on ![Next Starter Kit](https://dwdwn8b5ye.ufs.sh/f/MD2AM9SEY8GucGJl7b5qyE7
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
 
-If you find this template helpful, please give it a ⭐️ on GitHub!
