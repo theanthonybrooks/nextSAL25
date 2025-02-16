@@ -105,20 +105,23 @@ const PricingCard = ({
 }: PricingCardProps) => {
   const router = useRouter()
 
-  const getCheckoutUrl = useAction(api.subscriptions.getCheckoutUrl)
+  const getCheckoutUrl = useAction(
+    api.stripeSubscriptions.createStripeCheckoutSession
+  )
   const subscriptionStatus = useQuery(
     api.subscriptions.getUserSubscriptionStatus
   )
 
   const handleCheckout = async (interval: "month" | "year") => {
     try {
-      const checkoutProUrl = await getCheckoutUrl({
+      const { url } = await getCheckoutUrl({
         interval,
         planKey,
       })
 
-      if (checkoutProUrl) {
-        window.location.href = checkoutProUrl
+      if (url) {
+        window.location.href = url
+        console.log("Checkout URL:", url)
       }
     } catch (error) {
       console.error("Failed to get checkout URL:", error)
@@ -222,7 +225,7 @@ export default function Pricing() {
     setIsYearly(parseInt(value) === 1)
   const { user } = useUser()
 
-  const plans = useQuery(api.plans.getPlans)
+  const plans = useQuery(api.plans.getUserPlans)
   if (!plans) return <div>Loading plans...</div>
 
   if (subscriptionStatus?.hasActiveSubscription) {

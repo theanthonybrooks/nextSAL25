@@ -104,6 +104,9 @@ importers:
       encoding:
         specifier: ^0.1.13
         version: 0.1.13
+      framer-motion:
+        specifier: ^12.4.3
+        version: 12.4.3(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       fs-extra:
         specifier: ^11.2.0
         version: 11.3.0
@@ -162,8 +165,8 @@ importers:
         specifier: ^1.4.41
         version: 1.7.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       stripe:
-        specifier: ^14.16.0
-        version: 14.25.0
+        specifier: ^17.6.0
+        version: 17.6.0
       sugar-high:
         specifier: ^0.8.4
         version: 0.8.4
@@ -4157,8 +4160,8 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
-  stripe@14.25.0:
-    resolution: {integrity: sha512-wQS3GNMofCXwH8TSje8E1SE8zr6ODiGtHQgPtO95p9Mb4FhKC9jvXR2NUTpZ9ZINlckJcFidCmaTFV4P6vsb9g==}
+  stripe@17.6.0:
+    resolution: {integrity: sha512-+HB6+SManp0gSRB0dlPmXO+io18krlAe0uimXhhIkL/RG/VIRigkfoM3QDJPkqbuSW0XsA6uzsivNCJU1ELEDA==}
     engines: {node: '>=12.*'}
 
   style-to-js@1.1.16:
@@ -6466,7 +6469,7 @@ snapshots:
   dot-case@3.0.4:
     dependencies:
       no-case: 3.0.4
-      tslib: 2.4.1
+      tslib: 2.8.1
 
   dotenv@16.4.7: {}
 
@@ -7613,7 +7616,7 @@ snapshots:
 
   lower-case@2.0.2:
     dependencies:
-      tslib: 2.4.1
+      tslib: 2.8.1
 
   lowlight@1.20.0:
     dependencies:
@@ -7984,7 +7987,7 @@ snapshots:
   no-case@3.0.4:
     dependencies:
       lower-case: 2.0.2
-      tslib: 2.4.1
+      tslib: 2.8.1
 
   node-fetch@2.6.7(encoding@0.1.13):
     dependencies:
@@ -8596,7 +8599,7 @@ snapshots:
   snake-case@3.0.4:
     dependencies:
       dot-case: 3.0.4
-      tslib: 2.4.1
+      tslib: 2.8.1
 
   snakecase-keys@8.0.1:
     dependencies:
@@ -8728,7 +8731,7 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  stripe@14.25.0:
+  stripe@17.6.0:
     dependencies:
       '@types/node': 22.13.4
       qs: 6.14.0
