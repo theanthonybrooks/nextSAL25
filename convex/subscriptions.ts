@@ -1,8 +1,24 @@
-import { Polar } from "@polar-sh/sdk"
-
+import Stripe from "stripe"
 import { action, query } from "./_generated/server"
 
 //
+
+// Initialize the Stripe client
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-01-27.acacia" as any,
+})
+
+export const getStripeCustomerPortalUrl = async (
+  customerId: string,
+  returnUrl: string
+): Promise<string> => {
+  const session = await stripe.billingPortal.sessions.create({
+    customer: customerId,
+    return_url: returnUrl,
+  })
+
+  return session.url
+}
 
 export const getUserSubscriptionStatus = query({
   handler: async (ctx) => {
@@ -39,7 +55,7 @@ export const getUserSubscription = query({
     if (!identity) {
       return null
     }
-
+    console.log("identity: ", identity)
     const user = await ctx.db
       .query("users")
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.subject))
@@ -50,7 +66,7 @@ export const getUserSubscription = query({
     }
 
     const subscription = await ctx.db
-      .query("subscriptions")
+      .query("userSubscriptions")
       .withIndex("userId", (q) => q.eq("userId", user.tokenIdentifier))
       .first()
 
@@ -59,23 +75,38 @@ export const getUserSubscription = query({
   },
 })
 
-export const getUserDashboardUrl = action({
+// export const getUserDashboardUrl = action({
+//   handler: async (ctx, args: { customerId: string }) => {
+//     const polar = new Polar({
+//       server: "sandbox",
+//       accessToken: process.env.POLAR_ACCESS_TOKEN,
+//     })
+
+//     try {
+//       const result = await polar.customerSessions.create({
+//         customerId: args.customerId,
+//       })
+
+//       // Only return the URL to avoid Convex type issues
+//       return { url: result.customerPortalUrl }
+//     } catch (error) {
+//       console.error("Error creating customer session:", error)
+//       throw new Error("Failed to create customer session")
+//     }
+//   },
+// })
+
+export const getStripeDashboardUrl = action({
   handler: async (ctx, args: { customerId: string }) => {
-    const polar = new Polar({
-      server: "sandbox",
-      accessToken: process.env.POLAR_ACCESS_TOKEN,
-    })
-
     try {
-      const result = await polar.customerSessions.create({
-        customerId: args.customerId,
-      })
-
-      // Only return the URL to avoid Convex type issues
-      return { url: result.customerPortalUrl }
+      const url = await getStripeCustomerPortalUrl(
+        args.customerId,
+        process.env.FRONTEND_URL as string
+      )
+      return { url }
     } catch (error) {
-      console.error("Error creating customer session:", error)
-      throw new Error("Failed to create customer session")
+      console.error("Error creating Stripe portal session:", error)
+      throw new Error("Failed to create Stripe portal session")
     }
   },
 })

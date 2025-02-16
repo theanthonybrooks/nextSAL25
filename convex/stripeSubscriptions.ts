@@ -85,6 +85,9 @@ export const createStripeCheckoutSession = action({
           },
         ],
         mode: "subscription", // or "payment" for one-time payments
+        subscription_data: {
+          trial_period_days: 14, // 2-week free trial
+        },
         success_url: `${process.env.FRONTEND_URL}/success`,
         cancel_url: `${process.env.FRONTEND_URL}/cancel`,
         customer_email: user.email,
