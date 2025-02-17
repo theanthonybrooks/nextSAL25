@@ -2,9 +2,13 @@ import {
   Banana,
   CreditCard,
   Github,
+  HelpCircle,
   HomeIcon,
   Instagram,
+  LucideIcon,
+  Settings,
   Twitter,
+  User,
 } from "lucide-react"
 import { TbBrandPatreon } from "react-icons/tb"
 
@@ -119,5 +123,44 @@ export const SOCIAL_MEDIA_LINKS: SocialProps[] = [
     label: "Patreon",
     icon: <TbBrandPatreon className='h-5 w-5' />,
     path: "https://www.patreon.com/thestreetartlist",
+  },
+]
+interface DashNavItem {
+  label: string
+  href: string
+  icon: LucideIcon
+  sub: string[] // Change sub to an array of strings
+}
+
+export const dashboardNavItems: DashNavItem[] = [
+  {
+    label: "Overview",
+    href: "/dashboard",
+    icon: HomeIcon,
+    sub: ["active", "trialing"], // Visible to active, trialing users, and everyone
+  },
+  {
+    label: "Account",
+    href: "/dashboard/account",
+    icon: User,
+    sub: ["active", "trialing"], // Visible to active and trialing users
+  },
+  {
+    label: "Settings",
+    href: "/dashboard/settings",
+    icon: Settings,
+    sub: ["active", "trialing"], // Visible to active users only
+  },
+  {
+    label: "Billing",
+    href: "/dashboard/billing",
+    icon: CreditCard,
+    sub: ["active", "trialing", "cancelled"], // Visible to cancelled users only
+  },
+  {
+    label: "Help",
+    href: "/dashboard/help",
+    icon: HelpCircle,
+    sub: ["all"], // Visible to everyone
   },
 ]

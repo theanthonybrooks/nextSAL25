@@ -44,7 +44,10 @@ export const getUserSubscriptionStatus = query({
 
     const hasActiveSubscription =
       subscription?.status === "active" || subscription?.status === "trialing"
-    return { hasActiveSubscription }
+
+    const subStatus = subscription?.status
+    // console.log("Sub status: ", subStatus)
+    return { hasActiveSubscription, subStatus }
   },
 })
 

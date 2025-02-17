@@ -84,8 +84,8 @@ export const createStripeCheckoutSession = action({
     }
 
     // Choose the price ID based on the provided interval, defaulting to "month"
-    console.log("interval which: ", args.interval)
-    console.log("plan which: ", plan)
+    // console.log("interval which: ", args.interval)
+    // console.log("plan which: ", plan)
 
     const priceId =
       (args.interval && plan.prices[args.interval]?.usd?.stripeId) ||
@@ -98,7 +98,7 @@ export const createStripeCheckoutSession = action({
       interval: args.interval || "month",
     }
 
-    console.log("hadTrial: ", args.hadTrial)
+    // console.log("hadTrial: ", args.hadTrial)
 
     // Determine subscription data options
     const subscriptionData: Stripe.Checkout.SessionCreateParams.SubscriptionData =
@@ -126,7 +126,7 @@ export const createStripeCheckoutSession = action({
         client_reference_id: metadata.userId,
       })
 
-    console.log("checkout session created: ", session)
+    // console.log("checkout session created: ", session)
 
     // Ensure session.url is not null.
     if (!session.url) throw new Error("Stripe session URL is null")
@@ -136,9 +136,9 @@ export const createStripeCheckoutSession = action({
 })
 
 /**
- * Action: Create a billing portal session for the user to manage subscriptions.
+ * Action: Create a account portal session for the user to manage subscriptions.
  */
-export const getUserBillingPortalUrl = action({
+export const getUserAccountPortalUrl = action({
   handler: async (ctx: any) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Not authenticated")
@@ -169,7 +169,7 @@ export const subscriptionStoreWebhook = mutation({
   handler: async (ctx, args) => {
     // Extract event type from webhook payload
     let eventType = args.body.type
-    console.log("Event type store webhook:", eventType)
+    // console.log("Event type store webhook:", eventType)
     // Store webhook event
     await ctx.db.insert("stripeWebhookEvents", {
       type: eventType,
@@ -181,17 +181,17 @@ export const subscriptionStoreWebhook = mutation({
       data: args.body.data,
     })
 
-    console.log("args.body.data store webhook:", args.body.data)
+    // console.log("args.body.data store webhook:", args.body.data)
     // if (eventType === "checkout.session.completed") {
     //   eventType = "customer.subscription.created"
     // }
-    console.log("eventType once more: ", eventType)
+    // console.log("eventType once more: ", eventType)
     const userId = args.body.data.object.customer ?? null
-    console.log("userId: ", userId)
+    // console.log("userId: ", userId)
 
     switch (eventType) {
       case "customer.subscription.created":
-        console.log("customer.subscription.created:", args.body)
+        // console.log("customer.subscription.created:", args.body)
 
         // Extract subscription object from the event
         const subscription = args.body.data.object
@@ -206,10 +206,10 @@ export const subscriptionStoreWebhook = mutation({
           .first()
 
         if (existingSubscription) {
-          console.log(
-            "Updating existing subscription:",
-            existingSubscription._id
-          )
+          // console.log(
+          //   "Updating existing subscription:",
+          //   existingSubscription._id
+          // )
 
           // Update the existing subscription
           await ctx.db.patch(existingSubscription._id, {
@@ -236,6 +236,9 @@ export const subscriptionStoreWebhook = mutation({
               ? new Date(subscription.trial_end * 1000).getTime()
               : undefined,
             hadTrial: true,
+            customerCancellationComment: undefined,
+            customerCancellationReason: undefined,
+            lastEditedAt: new Date().getTime(),
           })
 
           const existingUser = await ctx.db
@@ -250,7 +253,7 @@ export const subscriptionStoreWebhook = mutation({
             })
           }
         } else {
-          console.log("Inserting new subscription")
+          // console.log("Inserting new subscription")
 
           // Insert a new subscription
           await ctx.db.insert("userSubscriptions", {
@@ -279,6 +282,7 @@ export const subscriptionStoreWebhook = mutation({
               : undefined,
             hadTrial: true,
             customerId: subscription.customer,
+            lastEditedAt: new Date().getTime(),
           })
         }
         break
@@ -300,8 +304,8 @@ export const subscriptionStoreWebhook = mutation({
           .first()
 
         if (checkoutUser) {
-          console.log("user subscription already exists")
-          console.log("checkout session: ", checkoutUser)
+          // console.log("user subscription already exists")
+          // console.log("checkout session: ", checkoutUser)
 
           await ctx.db.patch(checkoutUser._id, {
             userId: args.body.data.object.metadata?.userId,
@@ -313,12 +317,19 @@ export const subscriptionStoreWebhook = mutation({
             userId: args.body.data.object.metadata?.userId,
             metadata: args.body.data.object.metadata ?? {},
             customerId: args.body.data.object.customer,
+            paidStatus: args.body.data.object.paid,
           })
         }
 
         break
 
+      // ...
+      case "subscription_schedule.updated":
+        break
+      // ...
+
       case "customer.subscription.updated":
+        console.log("customer.subscription.updated:", args.body)
         // Find existing subscription
         const updatedSub = await ctx.db
           .query("userSubscriptions")
@@ -326,16 +337,56 @@ export const subscriptionStoreWebhook = mutation({
             q.eq("customerId", args.body.data.object.customer)
           )
           .first()
-        console.log("sub updated: ", updatedSub)
+
+        const base = args.body.data
+        const currentAmount = base.object.plan?.amount
+        const currentInterval = base.object.plan?.interval
+        const prevInterval = updatedSub?.interval
+        const prevAmount = base.previous_attributes?.plan?.amount
+
+        let amount: number | undefined
+        let nextAmount: number | undefined
+        let interval: string | undefined
+        let nextInterval: string | undefined
+
+        if (currentAmount < prevAmount) {
+          amount = prevAmount
+          nextAmount = currentAmount
+          if (currentInterval === "month") {
+            interval = prevInterval === "year" ? "year" : currentInterval
+            nextInterval =
+              currentInterval === "month" && prevInterval === "year"
+                ? currentInterval
+                : undefined
+          } else {
+            interval = currentInterval
+            nextInterval = undefined
+          }
+        } else {
+          amount = currentAmount
+          nextAmount = undefined
+          interval = currentInterval
+        }
+
         if (updatedSub) {
           const updates: any = {
-            status: args.body.data.object.status,
-            canceledAt: args.body.data.object.canceled_at
-              ? new Date(args.body.data.object.canceled_at * 1000).getTime()
+            status: base.object.status,
+            canceledAt: base.object.canceled_at
+              ? new Date(base.object.canceled_at * 1000).getTime()
               : undefined,
-            endedAt: args.body.data.object.ended_at
-              ? new Date(args.body.data.object.ended_at * 1000).getTime()
+            endedAt: base.object.ended_at
+              ? new Date(base.object.ended_at * 1000).getTime()
               : undefined,
+            interval: interval,
+            intervalNext: nextInterval,
+            amount: amount,
+            amountNext: nextAmount,
+            currentPeriodEnd: base.object.current_period_end
+              ? new Date(base.object.current_period_end * 1000).getTime()
+              : undefined,
+            stripeId: args.body.data.object.id,
+            //test if actually needed - the stripeId changes when the subscription is updated, but I don't know if it's able to reference/find the new one in reference to the old one or not. Wait and see.
+            lastEditedAt: new Date().getTime(),
           }
 
           const cancellationDetails = args.body.data.object.cancellation_details
@@ -359,7 +410,7 @@ export const subscriptionStoreWebhook = mutation({
             q.eq("customerId", args.body.data.object.customer)
           )
           .first()
-        console.log("sub deleted: ", deletedSub)
+        // console.log("sub deleted: ", deletedSub)
         if (deletedSub) {
           await ctx.db.patch(deletedSub._id, {
             status: args.body.data.object.status,
@@ -369,6 +420,21 @@ export const subscriptionStoreWebhook = mutation({
             endedAt: args.body.data.object.ended_at
               ? new Date(args.body.data.object.ended_at * 1000).getTime()
               : undefined,
+          })
+        }
+        break
+      case "invoice.payment_succeeded":
+        // Find existing subscription
+        const invoicePaid = await ctx.db
+          .query("userSubscriptions")
+          .withIndex("customerId", (q) =>
+            q.eq("customerId", args.body.data.object.customer)
+          )
+          .first()
+        console.log("Invoice paid: ", invoicePaid)
+        if (invoicePaid) {
+          await ctx.db.patch(invoicePaid._id, {
+            paidStatus: args.body.data.object.paid,
           })
         }
         break

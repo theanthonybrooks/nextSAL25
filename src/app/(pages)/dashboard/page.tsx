@@ -169,7 +169,7 @@ export default async function Dashboard() {
               asChild
               variant='outline'
               className='w-full justify-start gap-2'>
-              <Link href='/dashboard/finance'>
+              <Link href='/dashboard/account'>
                 <TrendingUp className='h-4 w-4' />
                 View Analytics
               </Link>

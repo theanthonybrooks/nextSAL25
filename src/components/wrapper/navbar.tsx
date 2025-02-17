@@ -1,4 +1,6 @@
 "use client"
+
+import { api } from "@/convex/_generated/api"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -15,11 +17,12 @@ import {
 import { cn } from "@/src/lib/utils"
 import { useAuth } from "@clerk/nextjs"
 import { Dialog } from "@radix-ui/react-dialog"
+import { useQuery } from "convex/react"
 import { motion } from "framer-motion"
 import { Github, Menu, Sparkles, Twitter, Youtube } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import * as React from "react"
+import React from "react"
 import ModeToggle from "../mode-toggle"
 import { Button } from "../ui/button"
 import {
@@ -32,8 +35,19 @@ import { UserProfile } from "../user-profile"
 
 export default function NavBar() {
   const { userId } = useAuth()
-  const navbarLinks = landingPageNavbarLinks
   const { image, alt, width, height, text, path } = landingPageLogo[0]
+  // Fetch the user's subscription status
+  const { subStatus } =
+    useQuery(api.subscriptions.getUserSubscriptionStatus) || {}
+  const statusKey = subStatus ? subStatus : "none"
+
+  // Filter landingPageNavbarLinks based on the user's subStatus; show link if its sub array includes statusKey or "all"
+  const filteredNavbarLinks = landingPageNavbarLinks.filter(
+    (link) => link.sub.includes(statusKey) || link.sub.includes("all")
+  )
+  const filteredNavbarMenu = components.filter(
+    (link) => link.sub.includes(statusKey) || link.sub.includes("all")
+  )
 
   return (
     <motion.div
@@ -42,7 +56,7 @@ export default function NavBar() {
       transition={{ duration: 0.5 }}
       className='fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-md bg-white/80 dark:bg-black/80'>
       <div className='flex items-center justify-between p-4 max-w-7xl mx-auto'>
-        {/* Logo - Mobile */}
+        {/* Mobile Logo and Navigation */}
         <div className='flex lg:hidden items-center gap-2'>
           <Dialog>
             <SheetTrigger asChild>
@@ -62,7 +76,7 @@ export default function NavBar() {
                   <h2 className='text-sm font-medium text-muted-foreground mb-2'>
                     Navigation
                   </h2>
-                  {components.map((item) => (
+                  {filteredNavbarMenu.map((item) => (
                     <Link key={item.href} href={item.href} prefetch={true}>
                       <Button
                         variant='ghost'
@@ -72,7 +86,6 @@ export default function NavBar() {
                     </Link>
                   ))}
                 </div>
-
                 <div className='px-2 py-4 border-t'>
                   <h2 className='text-sm font-medium text-muted-foreground mb-2'>
                     Links
@@ -110,7 +123,6 @@ export default function NavBar() {
                     </Button>
                   </Link>
                 </div>
-
                 {!userId && (
                   <div className='px-2 py-4 border-t mt-auto'>
                     <Link href='/sign-in' prefetch={true}>
@@ -129,7 +141,7 @@ export default function NavBar() {
           </Link>
         </div>
 
-        {/* Logo - Desktop */}
+        {/* Desktop Logo */}
         <div className='hidden lg:flex items-center gap-2'>
           <Link href={path} prefetch={true} className='flex items-center gap-2'>
             <Image src={image} alt={alt} width={width} height={height} />
@@ -145,7 +157,7 @@ export default function NavBar() {
                 <NavigationMenuTrigger>Resources</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className='grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]'>
-                    {components.map((component) => (
+                    {filteredNavbarMenu.map((component) => (
                       <ListItem
                         key={component.title}
                         title={component.title}
@@ -159,7 +171,7 @@ export default function NavBar() {
             </NavigationMenuList>
           </NavigationMenu>
 
-          {navbarLinks.map((link) => (
+          {filteredNavbarLinks.map((link) => (
             <Link key={link.title} href={link.href} prefetch={true}>
               {!link.isIcon ? (
                 <Button variant='ghost'>{link.title}</Button>

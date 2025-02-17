@@ -3,39 +3,70 @@ import { fetchQuery } from "convex/nextjs"
 import { NextResponse } from "next/server"
 import { api } from "../convex/_generated/api"
 
-const isProtectedRoute = createRouteMatcher([
-  "/dashboard(.*), /thelist(.*), /settings(.*), /account(.*), /billing(.*)",
-])
-
-// NOTE: Adjust these ^^^^^ routes as needed for the protected pages. Use similar routes for different levels of protection
+const allowedRoutes: Record<string, string[]> = {
+  active: [
+    "/dashboard/account",
+    "/dashboard/settings",
+    "/dashboard/billing",
+    "/dashboard",
+  ],
+  trialing: ["/dashboard(.*)"],
+  cancelled: [
+    "/dashboard/account",
+    "/dashboard/settings",
+    "/dashboard/billing",
+  ],
+  none: ["/pricing", "/"],
+}
 
 export default clerkMiddleware(async (auth, req) => {
   const token = await (await auth()).getToken({ template: "convex" })
 
-  const { hasActiveSubscription } = await fetchQuery(
+  // Fetch subscription status from Convex.
+  const { hasActiveSubscription, subStatus } = await fetchQuery(
     api.subscriptions.getUserSubscriptionStatus,
     {},
-    {
-      token: token!,
-    }
+    { token: token! }
   )
+  console.log("Sub status: ", subStatus)
+  const pathname = req.nextUrl.pathname
 
-  const isDashboard = req.nextUrl.href.includes(`/dashboard`)
+  // Use "none" if subStatus is undefined.
+  const currentStatus = subStatus ? subStatus : "none"
 
-  if (isDashboard && !hasActiveSubscription) {
-    const pricingUrl = new URL("/pricing", req.nextUrl.origin)
-    // Redirect to the pricing page
-    return NextResponse.redirect(pricingUrl)
+  // Redirect immediately if the user has no valid sub and is on a dashboard route.
+  if (currentStatus === "none" && pathname.startsWith("/dashboard")) {
+    return NextResponse.redirect(new URL("/", req.nextUrl.origin))
   }
 
-  if (isProtectedRoute(req)) await auth.protect()
+  const allowedForStatus = allowedRoutes[currentStatus] || []
+  const isAllowed = allowedForStatus.some((route) => {
+    const regex = new RegExp(`^${route}$`, "i")
+    return regex.test(pathname)
+  })
+
+  if (pathname.startsWith("/dashboard") && !isAllowed) {
+    const referer = req.headers.get("referer")
+    const target = referer ? referer : "/"
+    const redirectUrl = new URL(target, req.nextUrl.origin)
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  const matcher = createRouteMatcher([
+    "/dashboard(.*)",
+    "/thelist(.*)",
+    "/settings(.*)",
+    "/account(.*)",
+    "/account(.*)",
+  ])
+  if (matcher(req)) await auth.protect()
+
+  return NextResponse.next()
 })
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
     "/(api|trpc)(.*)",
   ],
 }

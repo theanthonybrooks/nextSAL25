@@ -43,7 +43,7 @@ type PricingCardProps = {
 const ExistingSubscription = () => {
   return (
     <Card className='w-full max-w-sm flex flex-col justify-between px-2 py-1'>
-      <Link href='/dashboard/finance'>
+      <Link href='/dashboard/account'>
         <Button className={"w-full bg-white text-gray-900 hover:bg-gray-100"}>
           Manage Subscription
         </Button>
@@ -118,7 +118,7 @@ const PricingCard = ({
     api.stripeSubscriptions.getUserHasSubscription
   )
 
-  console.log("hasSubscription: ", hasSubscription)
+  // console.log("hasSubscription: ", hasSubscription)
 
   const handleCheckout = async (
     interval: "month" | "year",

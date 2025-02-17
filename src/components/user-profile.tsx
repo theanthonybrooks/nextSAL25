@@ -61,7 +61,7 @@ export function UserProfile() {
             </DropdownMenuItem>
           </Link>
           {subscription && (
-            <Link href='/dashboard/finance'>
+            <Link href='/dashboard/account'>
               <DropdownMenuItem className='focus:bg-blue-50 dark:focus:bg-blue-950'>
                 <Sparkles className='mr-2 h-4 w-4' />
                 <span>Manage Subscription</span>
