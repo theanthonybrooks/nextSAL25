@@ -31,6 +31,7 @@ import { Bell, Globe, Lock, Mail, Moon, Palette, Shield } from "lucide-react"
 
 export default function SettingsPage() {
   const user = useUser()
+  console.log("user: ", user)
 
   return (
     <div className='flex flex-col gap-6 p-6'>
@@ -63,7 +64,10 @@ export default function SettingsPage() {
               <CardContent className='space-y-6'>
                 <div className='flex items-center gap-6'>
                   <Avatar className='h-20 w-20'>
-                    <AvatarImage src='/avatars/user.jpg' alt='User' />
+                    <AvatarImage
+                      src={user?.user?.imageUrl || "/avatars/default.jpg"}
+                      alt='User'
+                    />
                     <AvatarFallback>UN</AvatarFallback>
                   </Avatar>
                   <Button variant='outline'>Change Avatar</Button>

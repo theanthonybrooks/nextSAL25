@@ -114,9 +114,10 @@ export default defineSchema({
     currentPeriodStart: v.optional(v.number()),
     currentPeriodEnd: v.optional(v.number()),
     cancelAtPeriodEnd: v.optional(v.boolean()),
+    hadTrial: v.optional(v.boolean()),
     amount: v.optional(v.number()),
     startedAt: v.optional(v.number()),
-    endsAt: v.optional(v.number()),
+    trialEndsAt: v.optional(v.number()),
     endedAt: v.optional(v.number()),
     canceledAt: v.optional(v.number()),
     customerCancellationReason: v.optional(v.string()),
@@ -126,7 +127,8 @@ export default defineSchema({
     customerId: v.optional(v.string()),
   })
     .index("userId", ["userId"])
-    .index("stripeId", ["stripeId"]),
+    .index("stripeId", ["stripeId"])
+    .index("customerId", ["customerId"]),
 
   webhookEvents: defineTable({
     type: v.string(),

@@ -25,7 +25,11 @@ export default async function SuccessPage() {
         </h1>
       ) : (
         <h1 className='mt-[35vh] mb-3 scroll-m-20  text-5xl font-semibold tracking-tight transition-colors first:mt-0'>
-          You Can Subscribe Now
+          {/* You Can Subscribe Now */}
+          {/* //TODO: Add a follow-up asking users to fill out the form selecting
+          what they would like to do (role) and gathering info needed in order
+          to apply to projects. */}
+          Subscription Successful 🎉
         </h1>
       )}
       <Link

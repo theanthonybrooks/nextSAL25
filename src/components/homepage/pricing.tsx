@@ -112,16 +112,28 @@ const PricingCard = ({
     api.subscriptions.getUserSubscriptionStatus
   )
 
-  const handleCheckout = async (interval: "month" | "year") => {
+  const hadTrial = useQuery(api.stripeSubscriptions.getUserHadTrial)
+
+  const hasSubscription = useQuery(
+    api.stripeSubscriptions.getUserHasSubscription
+  )
+
+  console.log("hasSubscription: ", hasSubscription)
+
+  const handleCheckout = async (
+    interval: "month" | "year",
+    hadTrial: boolean
+  ) => {
     try {
       const { url } = await getCheckoutUrl({
         interval,
         planKey,
+        hadTrial,
       })
 
       if (url) {
         window.location.href = url
-        console.log("Checkout URL:", url)
+        // console.log("Checkout URL:", url)
       }
     } catch (error) {
       console.error("Failed to get checkout URL:", error)
@@ -201,7 +213,7 @@ const PricingCard = ({
               router.push("/sign-in")
               return
             }
-            handleCheckout(isYearly ? "year" : "month")
+            handleCheckout(isYearly ? "year" : "month", hadTrial ?? false)
           }}
           className={cn("w-full", {
             "bg-blue-500 hover:bg-blue-400": popular,

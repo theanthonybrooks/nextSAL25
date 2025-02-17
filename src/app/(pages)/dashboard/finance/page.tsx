@@ -135,7 +135,7 @@ export default function FinancePage() {
                     ) : subscription?.status === "unpaid" ? (
                       <span className='text-yellow-600'>Unpaid</span>
                     ) : subscription?.status === "trialing" ? (
-                      <span className='text-yellow-600'>Trialing</span>
+                      <span className='text-yellow-600'>2 Week Free Trial</span>
                     ) : (
                       <span className='text-gray-600'>Unknown</span>
                     )}
@@ -165,10 +165,24 @@ export default function FinancePage() {
                 <div className='flex justify-between items-center'>
                   <span className='text-muted-foreground'>Next Billing:</span>
                   <span className='font-medium'>
-                    {format(
-                      new Date(subscription?.currentPeriodEnd!),
-                      "eee, MMM do, yyyy"
-                    )}
+                    {subscription?.currentPeriodEnd
+                      ? (() => {
+                          const currentPeriodEnd = new Date(
+                            subscription.currentPeriodEnd
+                          )
+                          const now = new Date()
+
+                          // Check if canceledAt exists and is between now and currentPeriodEnd
+                          if (subscription.canceledAt) {
+                            const canceledAt = new Date(subscription.canceledAt)
+                            if (canceledAt <= now && now < currentPeriodEnd) {
+                              return "Cancelled"
+                            }
+                          }
+
+                          return format(currentPeriodEnd, "eee, MMM do, yyyy")
+                        })()
+                      : "N/A"}
                   </span>
                 </div>
                 <div className='flex justify-between items-center'>

@@ -42,7 +42,8 @@ export const getUserSubscriptionStatus = query({
       .withIndex("userId", (q) => q.eq("userId", user.tokenIdentifier))
       .first()
 
-    const hasActiveSubscription = subscription?.status === "active"
+    const hasActiveSubscription =
+      subscription?.status === "active" || subscription?.status === "trialing"
     return { hasActiveSubscription }
   },
 })

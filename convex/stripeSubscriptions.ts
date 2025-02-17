@@ -6,6 +6,7 @@ import {
   httpAction,
   internalQuery,
   mutation,
+  query,
 } from "./_generated/server"
 import schema from "./schema"
 
@@ -27,15 +28,39 @@ export const getPlanByKey = internalQuery({
   },
 })
 
+export const getUserHadTrial = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return false
+    const sub = await ctx.db
+      .query("userSubscriptions")
+      .withIndex("userId", (q) => q.eq("userId", identity.subject))
+      .first()
+    return sub?.hadTrial === true
+  },
+})
+export const getUserHasSubscription = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return false
+    const sub = await ctx.db
+      .query("userSubscriptions")
+      .withIndex("userId", (q) => q.eq("userId", identity.subject))
+      .first()
+    return sub ? sub.status === "active" || sub.status === "trialing" : false
+  },
+})
+
 // ACTION: Create a Stripe Checkout Session.
 export const createStripeCheckoutSession = action({
   args: {
     planKey: schema.tables.userPlans.validator.fields.key,
     interval: v.optional(v.string()),
+    hadTrial: v.optional(v.boolean()),
   },
   handler: async (
     ctx,
-    args: { planKey: string; interval?: string }
+    args: { planKey: string; interval?: string; hadTrial?: boolean }
   ): Promise<{ url: string }> => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Not authenticated")
@@ -59,8 +84,8 @@ export const createStripeCheckoutSession = action({
     }
 
     // Choose the price ID based on the provided interval, defaulting to "month"
-    console.log("interval: ", args.interval)
-    console.log("plan: ", plan)
+    console.log("interval which: ", args.interval)
+    console.log("plan which: ", plan)
 
     const priceId =
       (args.interval && plan.prices[args.interval]?.usd?.stripeId) ||
@@ -69,10 +94,18 @@ export const createStripeCheckoutSession = action({
     const metadata: Record<string, string> = {
       userId: user.tokenIdentifier,
       userEmail: user.email,
-      tokenIdentifier: identity.subject,
       plan: args.planKey,
       interval: args.interval || "month",
     }
+
+    console.log("hadTrial: ", args.hadTrial)
+
+    // Determine subscription data options
+    const subscriptionData: Stripe.Checkout.SessionCreateParams.SubscriptionData =
+      {
+        ...(args.hadTrial ? {} : { trial_period_days: 14 }),
+      }
+
     // console.log("metadata: ", metadata)
     // Create a Stripe Checkout Session.
     const session: Stripe.Checkout.Session =
@@ -85,9 +118,7 @@ export const createStripeCheckoutSession = action({
           },
         ],
         mode: "subscription", // or "payment" for one-time payments
-        subscription_data: {
-          trial_period_days: 14, // 2-week free trial
-        },
+        subscription_data: subscriptionData,
         success_url: `${process.env.FRONTEND_URL}/success`,
         cancel_url: `${process.env.FRONTEND_URL}/cancel`,
         customer_email: user.email,
@@ -95,141 +126,13 @@ export const createStripeCheckoutSession = action({
         client_reference_id: metadata.userId,
       })
 
-    console.log("session: ", session)
+    console.log("checkout session created: ", session)
 
     // Ensure session.url is not null.
     if (!session.url) throw new Error("Stripe session URL is null")
 
     return { url: session.url }
   },
-})
-
-/**
- * Mutation: Store or update a Stripe subscription based on a Stripe webhook event.
- * This function assumes the event's data.object is a Stripe.Subscription.
- */
-export const storeStripeSubscriptionWebhook = mutation({
-  args: {
-    body: v.any(), // Stripe event data object
-    eventType: v.string(), // e.g., "customer.subscription.created"
-  },
-  handler: async (ctx: any, { body, eventType }) => {
-    // Store the raw event if desired.
-    const webhookEvent = {
-      type: eventType,
-      stripeEventId: body.id,
-      createdAt: new Date().toISOString(),
-      modifiedAt: new Date().toISOString(),
-      data: body,
-    }
-    console.log("Inserting webhook event:", webhookEvent)
-    await ctx.db.insert("stripeWebhookEvents", webhookEvent)
-
-    // Update your userSubscriptions table based on the event type.
-    switch (eventType) {
-      case "customer.subscription.created": {
-        await ctx.db.insert("userSubscriptions", {
-          stripeSubscriptionId: body.id,
-          status: body.status,
-          currentPeriodStart: body.current_period_start * 1000,
-          currentPeriodEnd: body.current_period_end * 1000,
-          cancelAtPeriodEnd: body.cancel_at_period_end,
-          customerId: body.customer,
-          metadata: body.metadata,
-        })
-        break
-      }
-      case "customer.subscription.updated": {
-        const existing = await ctx.db
-          .query("userSubscriptions")
-          .withIndex("stripeSubscriptionId", (q: any) =>
-            q.eq("stripeSubscriptionId", body.id)
-          )
-          .first()
-        if (existing) {
-          await ctx.db.patch(existing._id, {
-            status: body.status,
-            currentPeriodStart: body.current_period_start * 1000,
-            currentPeriodEnd: body.current_period_end * 1000,
-            cancelAtPeriodEnd: body.cancel_at_period_end,
-            metadata: body.metadata,
-          })
-        }
-        break
-      }
-      case "customer.subscription.deleted": {
-        const existing = await ctx.db
-          .query("userSubscriptions")
-          .withIndex("stripeSubscriptionId", (q: any) =>
-            q.eq("stripeSubscriptionId", body.id)
-          )
-          .first()
-        if (existing) {
-          await ctx.db.patch(existing._id, {
-            status: "canceled",
-            endedAt: Date.now(),
-          })
-        }
-        break
-      }
-      default:
-        console.log(`Unhandled event type: ${eventType}`)
-    }
-  },
-})
-
-/**
- * HTTP Action: Stripe Webhook Handler.
- * Receives and verifies Stripe webhook events, then processes them.
- */
-export const stripeWebhookHandler = httpAction(async (ctx: any, request) => {
-  // Stripe requires the raw request body for signature verification.
-  const rawBody = await request.text()
-  const sig = request.headers.get("stripe-signature")
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
-
-  try {
-    const event = stripe.webhooks.constructEvent(rawBody, sig!, endpointSecret)
-    // Handle various event types:
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session
-      if (session.mode === "subscription" && session.subscription) {
-        // Retrieve full subscription details if needed:
-        const subscription = await stripe.subscriptions.retrieve(
-          session.subscription as string
-        )
-        await ctx.runMutation(
-          api.stripeSubscriptions.storeStripeSubscriptionWebhook,
-          {
-            body: subscription,
-            eventType: "customer.subscription.created",
-          },
-          console.log("subscription: ", subscription)
-        )
-      }
-    } else if (
-      event.type === "customer.subscription.created" ||
-      event.type === "customer.subscription.updated" ||
-      event.type === "customer.subscription.deleted"
-    ) {
-      await ctx.runMutation(
-        api.stripeSubscriptions.storeStripeSubscriptionWebhook,
-        {
-          body: event.data.object,
-          eventType: event.type,
-        }
-      )
-    } else {
-      console.log(`Received unhandled event type: ${event.type}`)
-    }
-    return new Response(JSON.stringify({ received: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    })
-  } catch (err: any) {
-    console.error("Stripe webhook error:", err.message)
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 })
-  }
 })
 
 /**
@@ -266,7 +169,7 @@ export const subscriptionStoreWebhook = mutation({
   handler: async (ctx, args) => {
     // Extract event type from webhook payload
     let eventType = args.body.type
-    console.log("Event type:", eventType)
+    console.log("Event type store webhook:", eventType)
     // Store webhook event
     await ctx.db.insert("stripeWebhookEvents", {
       type: eventType,
@@ -278,69 +181,138 @@ export const subscriptionStoreWebhook = mutation({
       data: args.body.data,
     })
 
-    console.log("args.body.data:", args.body.data)
-    if (eventType === "checkout.session.completed") {
-      eventType = "customer.subscription.created"
-    }
+    console.log("args.body.data store webhook:", args.body.data)
+    // if (eventType === "checkout.session.completed") {
+    //   eventType = "customer.subscription.created"
+    // }
     console.log("eventType once more: ", eventType)
-    const userId = args.body.data.object.metadata?.userId ?? null
+    const userId = args.body.data.object.customer ?? null
     console.log("userId: ", userId)
 
     switch (eventType) {
       case "customer.subscription.created":
         console.log("customer.subscription.created:", args.body)
-        // Insert new subscription
-        const subscription = args.body.data.object // The actual subscription object
 
-        await ctx.db.insert("userSubscriptions", {
-          stripeId: subscription.id,
-          // Assuming you want the plan id as the stripePriceId:
-          stripePriceId: subscription.plan?.id,
-          currency: subscription.currency,
-          // The interval is on the plan object:
-          interval: subscription.plan?.interval,
-          // Assuming metadata was set on the checkout session:
-          userId: subscription.metadata?.userId,
-          //   status: subscription.status,
-          status: "active", // Assume active by default for now TODO: update this
-          // Stripe timestamps are in seconds; convert them to milliseconds:
-          currentPeriodStart: subscription.current_period_start
-            ? new Date(subscription.current_period_start * 1000).getTime()
-            : undefined,
-          currentPeriodEnd: subscription.current_period_end
-            ? new Date(subscription.current_period_end * 1000).getTime()
-            : undefined,
-          cancelAtPeriodEnd: subscription.cancel_at_period_end,
-          // The amount might be on the plan:
-          amount: subscription.plan?.amount,
-          // Use the start_date field for startedAt (if that's your intention)
-          startedAt: subscription.start_date
-            ? new Date(subscription.start_date * 1000).getTime()
-            : undefined,
-          endedAt: subscription.ended_at
-            ? new Date(subscription.ended_at * 1000).getTime()
-            : undefined,
-          canceledAt: subscription.canceled_at
-            ? new Date(subscription.canceled_at * 1000).getTime()
-            : undefined,
-          customerCancellationReason:
-            subscription.customer_cancellation_reason || undefined,
-          customerCancellationComment:
-            subscription.customer_cancellation_comment || undefined,
-          metadata: subscription.metadata || {},
-          customFieldData: subscription.custom_field_data || {},
-          customerId: subscription.customer,
-        })
+        // Extract subscription object from the event
+        const subscription = args.body.data.object
+        // const currentUser =
 
-        const existingUser = await ctx.db
-          .query("users")
-          .withIndex("by_token", (q) => q.eq("tokenIdentifier", userId))
+        // Check if there's already a subscription with this customerId
+        const existingSubscription = await ctx.db
+          .query("userSubscriptions")
+          .withIndex("customerId", (q) =>
+            q.eq("customerId", subscription.customer)
+          )
           .first()
 
-        if (existingUser) {
-          const metadata = args.body.data.object.metadata
-          await ctx.db.patch(existingUser._id, {
-            subscription: `${metadata.interval}ly-${metadata.plan}`,
+        if (existingSubscription) {
+          console.log(
+            "Updating existing subscription:",
+            existingSubscription._id
+          )
+
+          // Update the existing subscription
+          await ctx.db.patch(existingSubscription._id, {
+            stripeId: subscription.id,
+            stripePriceId: subscription.plan?.id,
+            currency: subscription.currency,
+            interval: subscription.plan?.interval,
+            status: subscription.status,
+            currentPeriodStart: subscription.current_period_start
+              ? new Date(subscription.current_period_start * 1000).getTime()
+              : undefined,
+            currentPeriodEnd: subscription.current_period_end
+              ? new Date(subscription.current_period_end * 1000).getTime()
+              : undefined,
+            cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            amount: subscription.plan?.amount,
+            startedAt: subscription.start_date
+              ? new Date(subscription.start_date * 1000).getTime()
+              : undefined,
+            endedAt: subscription.ended_at
+              ? new Date(subscription.ended_at * 1000).getTime()
+              : undefined,
+            trialEndsAt: subscription.trial_end
+              ? new Date(subscription.trial_end * 1000).getTime()
+              : undefined,
+            hadTrial: true,
+          })
+
+          const existingUser = await ctx.db
+            .query("users")
+            .withIndex("by_token", (q) => q.eq("tokenIdentifier", userId))
+            .first()
+
+          if (existingUser) {
+            const metadata = args.body.data.object.metadata
+            await ctx.db.patch(existingUser._id, {
+              subscription: `${metadata.interval}ly-${metadata.plan}`,
+            })
+          }
+        } else {
+          console.log("Inserting new subscription")
+
+          // Insert a new subscription
+          await ctx.db.insert("userSubscriptions", {
+            stripeId: subscription.id,
+            stripePriceId: subscription.plan?.id,
+            currency: subscription.currency,
+            interval: subscription.plan?.interval,
+            userId: subscription.metadata?.userId,
+            status: subscription.status,
+            currentPeriodStart: subscription.current_period_start
+              ? new Date(subscription.current_period_start * 1000).getTime()
+              : undefined,
+            currentPeriodEnd: subscription.current_period_end
+              ? new Date(subscription.current_period_end * 1000).getTime()
+              : undefined,
+            cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            amount: subscription.plan?.amount,
+            startedAt: subscription.start_date
+              ? new Date(subscription.start_date * 1000).getTime()
+              : undefined,
+            endedAt: subscription.ended_at
+              ? new Date(subscription.ended_at * 1000).getTime()
+              : undefined,
+            trialEndsAt: subscription.trial_end
+              ? new Date(subscription.trial_end * 1000).getTime()
+              : undefined,
+            hadTrial: true,
+            customerId: subscription.customer,
+          })
+        }
+        break
+
+      case "checkout.session.completed":
+        // Find existing subscription
+        // const checkoutCompleted = await ctx.db
+        //   .query("userSubscriptions")
+        //   .withIndex("customerId", (q) =>
+        //     q.eq("customerId", args.body.data.object.customer)
+        //   )
+        //   .first()
+
+        const checkoutUser = await ctx.db
+          .query("userSubscriptions")
+          .withIndex("userId", (q) =>
+            q.eq("userId", args.body.data.object.metadata.userId)
+          )
+          .first()
+
+        if (checkoutUser) {
+          console.log("user subscription already exists")
+          console.log("checkout session: ", checkoutUser)
+
+          await ctx.db.patch(checkoutUser._id, {
+            userId: args.body.data.object.metadata?.userId,
+            metadata: args.body.data.object.metadata ?? {},
+            customerId: args.body.data.object.customer,
+          })
+        } else {
+          await ctx.db.insert("userSubscriptions", {
+            userId: args.body.data.object.metadata?.userId,
+            metadata: args.body.data.object.metadata ?? {},
+            customerId: args.body.data.object.customer,
           })
         }
 
@@ -348,24 +320,55 @@ export const subscriptionStoreWebhook = mutation({
 
       case "customer.subscription.updated":
         // Find existing subscription
-        const existingSub = await ctx.db
+        const updatedSub = await ctx.db
           .query("userSubscriptions")
-          .withIndex("stripeId", (q) => q.eq("stripeId", args.body.data.id))
+          .withIndex("customerId", (q) =>
+            q.eq("customerId", args.body.data.object.customer)
+          )
           .first()
+        console.log("sub updated: ", updatedSub)
+        if (updatedSub) {
+          const updates: any = {
+            status: args.body.data.object.status,
+            canceledAt: args.body.data.object.canceled_at
+              ? new Date(args.body.data.object.canceled_at * 1000).getTime()
+              : undefined,
+            endedAt: args.body.data.object.ended_at
+              ? new Date(args.body.data.object.ended_at * 1000).getTime()
+              : undefined,
+          }
 
-        if (existingSub) {
-          await ctx.db.patch(existingSub._id, {
-            amount: args.body.data.amount,
-            status: args.body.data.status,
-            currentPeriodStart: new Date(
-              args.body.data.current_period_start
-            ).getTime(),
-            currentPeriodEnd: new Date(
-              args.body.data.current_period_end
-            ).getTime(),
-            cancelAtPeriodEnd: args.body.data.cancel_at_period_end,
-            metadata: args.body.data.metadata || {},
-            customFieldData: args.body.data.custom_field_data || {},
+          const cancellationDetails = args.body.data.object.cancellation_details
+          if (cancellationDetails) {
+            if (cancellationDetails.comment) {
+              updates.customerCancellationComment = cancellationDetails.comment
+            }
+            if (cancellationDetails.reason) {
+              updates.customerCancellationReason = cancellationDetails.reason
+            }
+          }
+
+          await ctx.db.patch(updatedSub._id, updates)
+        }
+        break
+      case "customer.subscription.deleted":
+        // Find existing subscription
+        const deletedSub = await ctx.db
+          .query("userSubscriptions")
+          .withIndex("customerId", (q) =>
+            q.eq("customerId", args.body.data.object.customer)
+          )
+          .first()
+        console.log("sub deleted: ", deletedSub)
+        if (deletedSub) {
+          await ctx.db.patch(deletedSub._id, {
+            status: args.body.data.object.status,
+            canceledAt: args.body.data.object.canceled_at
+              ? new Date(args.body.data.object.canceled_at * 1000).getTime()
+              : undefined,
+            endedAt: args.body.data.object.ended_at
+              ? new Date(args.body.data.object.ended_at * 1000).getTime()
+              : undefined,
           })
         }
         break
@@ -394,14 +397,14 @@ export const subscriptionStoreWebhook = mutation({
 
         if (canceledSub) {
           await ctx.db.patch(canceledSub._id, {
-            status: args.body.data.status,
-            canceledAt: args.body.data.canceled_at
-              ? new Date(args.body.data.canceled_at).getTime()
+            status: args.body.data.object.status,
+            canceledAt: args.body.data.object.canceled_at
+              ? new Date(args.body.data.object.canceled_at).getTime()
               : undefined,
             customerCancellationReason:
-              args.body.data.customer_cancellation_reason || undefined,
+              args.body.data.object.customer_cancellation_reason || undefined,
             customerCancellationComment:
-              args.body.data.customer_cancellation_comment || undefined,
+              args.body.data.object.customer_cancellation_comment || undefined,
           })
         }
         break
