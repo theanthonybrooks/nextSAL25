@@ -1,6 +1,7 @@
-import Provider from "@/src/providers/clerkProvider"
 import { ThemeProvider } from "@/src/components/theme-provider"
 import { Toaster } from "@/src/components/ui/sonner"
+import StateWrapper from "@/src/components/wrapper/state-wrapper"
+import Provider from "@/src/providers/clerkProvider"
 import { PostHogProvider } from "@/src/providers/posthogProvider"
 import { ClerkProvider } from "@clerk/nextjs"
 import { GeistSans } from "geist/font/sans"
@@ -53,7 +54,7 @@ export default function RootLayout({
                 defaultTheme='dark'
                 enableSystem
                 disableTransitionOnChange>
-                {children}
+                <StateWrapper> {children}</StateWrapper>
                 <Toaster />
               </ThemeProvider>
             </Provider>

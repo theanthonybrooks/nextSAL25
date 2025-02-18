@@ -29,7 +29,7 @@ export default function AccountPage() {
   const canceledAt =
     subscription?.canceledAt !== undefined && subscription?.canceledAt
 
-  console.log("canceledAt: ", canceledAt)
+  // console.log("canceledAt: ", canceledAt)
   const isCancelled = subscription?.status === "cancelled"
 
   let interval: string | undefined
@@ -147,7 +147,9 @@ export default function AccountPage() {
                   <span className='text-muted-foreground'>Status:</span>
                   <span className='font-medium capitalize'>
                     {subscription?.status === "active" ? (
-                      <span className='bg-green-100 text-green-700 py-1 px-3 rounded font-medium'>
+                      <span
+                        className='border-green-400 border-2
+                       bg-green-100 text-green-700 py-1 px-3 rounded font-medium'>
                         Active
                       </span>
                     ) : subscription?.status === "past_due" ? (

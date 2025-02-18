@@ -1,10 +1,29 @@
 "use client"
 
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
-import { ChevronDown } from "lucide-react"
 import * as React from "react"
 
 import { cn } from "@/src/lib/utils"
+
+interface CustomAccordionTriggerProps
+  extends React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger> {
+  iconClosed?: React.ReactNode
+  iconOpen?: React.ReactNode
+  icon?: React.ReactNode
+}
+
+function generateDataStateClasses() {
+  return `
+    [&[data-state=closed]>svg.closed]:rotate-0 
+    [&[data-state=open]>svg.closed]:rotate-90 
+    [&[data-state=closed]>svg.open]:rotate-90 
+    [&[data-state=open]>svg.open]:rotate-0 
+    [&[data-state=open]>svg.open]:opacity-100
+    [&[data-state=open]>svg.closed]:opacity-0
+    [&[data-state=closed]>svg.open]:opacity-0
+    [&[data-state=closed]>svg.closed]:opacity-100
+  `
+}
 
 const Accordion = AccordionPrimitive.Root
 
@@ -22,18 +41,21 @@ AccordionItem.displayName = "AccordionItem"
 
 const AccordionTrigger = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+  CustomAccordionTriggerProps
+>(({ className, iconClosed, iconOpen, icon, children, ...props }, ref) => (
   <AccordionPrimitive.Header className='flex'>
     <AccordionPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180",
+        "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline relative",
+        generateDataStateClasses(),
         className
       )}
       {...props}>
       {children}
-      <ChevronDown className='h-4 w-4 shrink-0 transition-transform duration-200' />
+      {icon ? icon : null}
+      {iconClosed ? iconClosed : null}
+      {iconOpen ? iconOpen : null}
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
 ))

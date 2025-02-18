@@ -21,21 +21,21 @@ export const landingPageNavbarMenuLinks: {
     sub: ["active", "trialing"],
   },
   {
-    title: "Blog",
-    href: "/blog",
-    description: "Read my interesting blog posts.",
+    title: "Changelog",
+    href: "/changelog",
+    description: "Read my interesting changelog posts.",
     sub: ["all"],
   },
   {
     title: "Pricing",
     href: "/pricing",
-    description: "Read my interesting blog posts.",
+    description: "The price of job security.",
     sub: ["all"],
   },
   {
     title: "Smog",
     href: "/smog",
-    description: "Read my interesting blog posts.",
+    description: "The dragon that ate my family.",
     sub: ["admin"],
   },
 ]
@@ -67,10 +67,16 @@ export const landingPageNavbarLinks: {
     description: "View all current open calls & events.",
     sub: ["all"],
   },
+  // {
+  //   title: "Map",
+  //   href: "/map",
+  //   description: "View all current open calls & events.",
+  //   sub: ["all"],
+  // },
   {
-    title: "Map",
-    href: "/map",
-    description: "View all current open calls & events.",
+    title: "Pricing",
+    href: "/pricing",
+    description: "View them prices.",
     sub: ["all"],
   },
   {

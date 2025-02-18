@@ -59,7 +59,7 @@ export const getUserSubscription = query({
     if (!identity) {
       return null
     }
-    console.log("identity: ", identity)
+    // console.log("identity: ", identity)
     const user = await ctx.db
       .query("users")
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.subject))
@@ -74,7 +74,7 @@ export const getUserSubscription = query({
       .withIndex("userId", (q) => q.eq("userId", user.tokenIdentifier))
       .first()
 
-    console.log("User: ", user, "Subscription: ", subscription)
+    // console.log("User: ", user, "Subscription: ", subscription)
     return subscription
   },
 })

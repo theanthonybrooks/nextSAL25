@@ -1,6 +1,6 @@
 type SitemapEntry = {
-  url: string;
-  lastModified: string;
+  url: string
+  lastModified: string
   changeFrequency:
     | "always"
     | "hourly"
@@ -8,12 +8,12 @@ type SitemapEntry = {
     | "weekly"
     | "monthly"
     | "yearly"
-    | "never";
-  priority?: number;
-};
+    | "never"
+  priority?: number
+}
 
 export default async function sitemap(): Promise<SitemapEntry[]> {
-  const baseUrl = "https://nextstarter.xyz";
+  const baseUrl = "https://nextstarter.xyz"
 
   const staticPages: SitemapEntry[] = [
     {
@@ -23,12 +23,12 @@ export default async function sitemap(): Promise<SitemapEntry[]> {
       priority: 1,
     },
     {
-      url: `${baseUrl}/blog`,
+      url: `${baseUrl}/changelog`,
       lastModified: new Date().toISOString(),
       changeFrequency: "weekly",
       priority: 0.8,
     },
-  ];
+  ]
 
-  return [...staticPages];
+  return [...staticPages]
 }

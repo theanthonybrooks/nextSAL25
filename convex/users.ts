@@ -24,6 +24,28 @@ export const getUserByToken = query({
   },
 })
 
+export const getUserRole = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      return null
+    }
+    // console.log("identity: ", identity)
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.subject))
+      .unique()
+
+    if (!user) {
+      return null
+    }
+
+    return user.role
+
+    // console.log("User: ", user, "Subscription: ", subscription)
+  },
+})
+
 export const store = mutation({
   args: {},
   handler: async (ctx) => {

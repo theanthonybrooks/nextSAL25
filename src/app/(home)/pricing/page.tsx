@@ -2,7 +2,7 @@
 
 import { AccordionComponent } from "@/src/components/homepage/accordion-component"
 import Pricing from "@/src/components/homepage/pricing"
-import PageWrapper from "@/src/components/wrapper/page-wrapper"
+import { faqs2 } from "@/src/constants/accordions"
 import { motion } from "framer-motion"
 import { Check, DollarSign } from "lucide-react"
 
@@ -19,7 +19,7 @@ export default function PricingPage() {
   ]
 
   return (
-    <PageWrapper>
+    <>
       <div className='container mx-auto px-4'>
         <section className='relative flex flex-col items-center justify-center py-20'>
           {/* Background gradient */}
@@ -99,9 +99,9 @@ export default function PricingPage() {
         </section>
 
         <section className='pb-20'>
-          <AccordionComponent />
+          <AccordionComponent src={faqs2} />
         </section>
       </div>
-    </PageWrapper>
+    </>
   )
 }

@@ -2,7 +2,7 @@
 import Footer from "../../components/wrapper/footer"
 import NavBar from "../../components/wrapper/navbar"
 
-export default function PageWrapper({
+export default function HomeLayout({
   children,
 }: {
   children: React.ReactNode
