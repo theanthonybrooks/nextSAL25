@@ -61,6 +61,16 @@ export default clerkMiddleware(async (auth, req) => {
   ])
   if (matcher(req)) await auth.protect()
 
+  // Check if the user is authenticated and redirect if they try to visit /sign-in, /sign-up, or /forgot-password
+  // const authRoutes = ["/sign-in", "/sign-up", "/forgot-password"]
+  // const isAuthRoute = authRoutes.includes(pathname)
+
+  // if (isAuthRoute) {
+  //   if (token) {
+  //     return NextResponse.redirect(new URL("/", req.nextUrl.origin))
+  //   }
+  // }
+
   return NextResponse.next()
 })
 

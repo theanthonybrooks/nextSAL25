@@ -116,7 +116,11 @@ export default function ThemeToggle() {
             d={sunPath}
             fill='transparent'
             transition={{ duration: 1, type: "spring" }}
-            initial={{ fillOpacity: 0, strokeOpacity: 0 }}
+            initial={{
+              fillOpacity: 0,
+              strokeOpacity: 0,
+              transformOrigin: "50% 50%",
+            }}
             animate={
               theme === "dark"
                 ? {
