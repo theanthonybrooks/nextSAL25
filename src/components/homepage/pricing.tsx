@@ -221,8 +221,6 @@ const PricingCard = ({
           })}>
           Get {title}
         </Button>
-        {/* <PurchaseLink url='https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_QCYl5Gy5m8wF4dyCyPFLR5PQP83K5hNo2LiSK1fCBTM/redirect' />
-        <PurchaseLink url='https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_cVUP7tMPkExxPfNfa3xYFTQR9q7h2iAguES1j3YBtEH/redirect' /> */}
       </CardFooter>
     </Card>
   )
@@ -253,7 +251,7 @@ export default function Pricing() {
   }
 
   return (
-    <section className='px-4'>
+    <section className='px-4 price-card-cont'>
       <div className='max-w-7xl mx-auto'>
         <PricingHeader
           title='Choose Your Plan'

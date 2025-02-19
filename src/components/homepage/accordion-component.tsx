@@ -13,11 +13,13 @@ interface AccordionComponentProps {
   src: AccordionSection
 }
 
+const AccordionContainer = motion.section
+
 export function AccordionComponent({ src }: AccordionComponentProps) {
   const defaultValue = src.firstOpen ? "item-1" : undefined
 
   return (
-    <section className='py-24 px-4 accordion-cont'>
+    <AccordionContainer className='py-24 px-4 accordion-cont'>
       <div className='max-w-[80vw] mx-auto'>
         {/* Section Header */}
         <motion.div
@@ -96,6 +98,6 @@ export function AccordionComponent({ src }: AccordionComponentProps) {
           </Accordion>
         </motion.div>
       </div>
-    </section>
+    </AccordionContainer>
   )
 }

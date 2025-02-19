@@ -9,6 +9,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/src/components/ui/navigation-menu"
+import ThemeToggle from "@/src/components/ui/theme-toggle"
 import { landingPageLogo } from "@/src/constants/logos"
 import {
   landingPageNavbarMenuLinks as components,
@@ -23,7 +24,6 @@ import { Github, Menu, Sparkles, Twitter, Youtube } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import React from "react"
-import ModeToggle from "../mode-toggle"
 import { Button } from "../ui/button"
 import {
   SheetContent,
@@ -186,7 +186,8 @@ export default function NavBar() {
 
         {/* Right Side */}
         <div className='flex items-center gap-2'>
-          <ModeToggle />
+          {/* <ModeToggle /> */}
+          <ThemeToggle />
           {!userId && (
             <Link href='/sign-in' prefetch={true}>
               <Button

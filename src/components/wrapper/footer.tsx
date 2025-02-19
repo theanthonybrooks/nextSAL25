@@ -33,8 +33,8 @@ export default function Footer() {
   const gridColsClass = getGridColsClass(numColumns)
 
   return (
-    <footer className='border-t bg-white dark:bg-black'>
-      <div className='mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:pt-16'>
+    <footer className='border-t bg-white dark:bg-black flex justify-center'>
+      <div className='mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:pt-16 xl:max-w-full xl:w-full xl:px-6'>
         <div className='xl:grid xl:grid-cols-2 xl:gap-8'>
           {/* Links */}
           <div className='mt-5 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0'>
@@ -60,7 +60,7 @@ export default function Footer() {
             </div>
             <div
               data-type='newsletter'
-              className='ml-5 width-full border-l-[1px] border-gray-200 pl-[5rem]'>
+              className='ml-5 width-full border-l-[1px] border-gray-200 pl-[5rem] flex flex-col justify-center'>
               <div>
                 <h3 className='text-sm font-semibold text-gray-900 dark:text-white'>
                   Stay Updated
@@ -72,7 +72,7 @@ export default function Footer() {
               </div>
               <form
                 onSubmit={handleSubmit(onSubmit)}
-                className='mt-4 sm:flex sm:max-w-md'>
+                className='mt-4 sm:flex sm:max-w-md md:w-full'>
                 <div className='flex-1'>
                   <Input
                     {...register("email", { required: true })}
