@@ -12,7 +12,7 @@ interface User {
   role: string[]
   tokenIdentifier: string
 }
-
+//NOTE: Not really useful as it's only used by AuthCheck, and I'm not actually using that as it basically just does what middleware does. Keeping this here for now in case I just learn that it's a better way to go?
 export const onAuthenticatedUser = query({
   args: {},
   handler: async (ctx) => {
@@ -62,42 +62,48 @@ export const onSignUpUser = mutation({
     // For example, you can check by email or userId:
     const existingUser = await ctx.db
       .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", args.userId))
+      .withIndex("by_email", (q) => q.eq("email", args.email))
       .unique()
-
+    console.log("existingUser: ", existingUser)
+    console.log("Args: ", args)
     if (existingUser) {
+      if (existingUser.tokenIdentifier !== args.tokenIdentifier) {
+        //want to somehow return something to the front end (or wherever, so that clerk will log them out and I can use a toast to say that they have an account and need to sign in)
+      }
       return {
         status: 200,
-        message: "User already exists",
+        message: "User already exists, please sign in",
         id: existingUser._id,
       }
     }
 
     // Insert a new user record using the form data
     try {
-      const createdUser = await ctx.db.insert("users", {
-        role: args.role, // e.g., ["guest"]
-        firstName: args.firstName,
-        lastName: args.lastName,
-        image: args.image || "",
-        email: args.email,
-        userId: args.userId,
-        tokenIdentifier: args.tokenIdentifier,
-        createdAt: new Date().toISOString(),
-      })
-
-      if (createdUser) {
-        return {
-          status: 200,
-          message: "User created successfully",
-          id: createdUser,
-        }
-      } else {
-        return {
-          status: 400,
-          message: "User could not be created! Try again",
-        }
+      if (args.email === "markcgrad@gmail.com") {
+        console.log("Mark's email: ", args.email)
       }
+      // const createdUser = await ctx.db.insert("users", {
+      //   role: args.role, // e.g., ["guest"]
+      //   firstName: args.firstName,
+      //   lastName: args.lastName,
+      //   image: args.image || "",
+      //   email: args.email,
+      //   userId: args.userId,
+      //   tokenIdentifier: args.tokenIdentifier,
+      //   createdAt: new Date().toISOString(),
+      // })
+      // if (createdUser) {
+      //   return {
+      //     status: 200,
+      //     message: "User created successfully",
+      //     id: createdUser,
+      //   }
+      // } else {
+      //   return {
+      //     status: 400,
+      //     message: "User could not be created! Try again",
+      //   }
+      // }
     } catch (error) {
       console.error("Error in onSignUpUser:", error)
       return {

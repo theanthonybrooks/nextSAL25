@@ -2,7 +2,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "next/router": ["irrelevants/emptyNextRouter.ts"]
     },
     "target": "es2017",
     "lib": ["dom", "dom.iterable", "esnext"],

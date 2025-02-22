@@ -18,7 +18,7 @@
 # misc
 .DS_Store
 *.pem
-/src/app/trash
+/app/trash
 
 # debug
 npm-debug.log*
@@ -35,5 +35,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# irrelevant
+zz. irrelevants
+
 
 

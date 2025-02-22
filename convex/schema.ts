@@ -49,7 +49,10 @@ export default defineSchema({
     subscription: v.optional(v.string()),
     // stripeSubscription: v.optional(v.string()),
     tokenIdentifier: v.string(),
-  }).index("by_token", ["tokenIdentifier"]),
+  })
+    .index("by_token", ["tokenIdentifier"])
+    .index("by_email", ["email"]),
+
   plans: defineTable({
     key: v.string(),
     title: v.string(),

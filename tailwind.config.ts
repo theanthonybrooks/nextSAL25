@@ -1,19 +1,20 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
-const svgToDataUri = require("mini-svg-data-uri")
+const svgToDataUri = require("mini-svg-data-uri");
 
-const colors = require("tailwindcss/colors")
+const colors = require("tailwindcss/colors");
 const {
   default: flattenColorPalette,
-} = require("tailwindcss/lib/util/flattenColorPalette")
+} = require("tailwindcss/lib/util/flattenColorPalette");
 
 const config: Config = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/**/*.{ts,tsx}",
+    // "./**/*.{ts,tsx}",
   ],
+
   darkMode: "class",
   theme: {
     container: {
@@ -30,9 +31,14 @@ const config: Config = {
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
       colors: {
+        txt: {
+          primary: "hsl(var(--text-primary))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        salYellow: "hsl(var(--sal-yellow))",
+        salPink: "hsl(var(--sal-pink))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
@@ -64,10 +70,42 @@ const config: Config = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
+      borderColor: {
+        bg: "rgba(0, 0, 0, 0.5)",
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        slg: "-5px 5px 0 0 #000000",
+        smd: "-3px 3px 0 0 #000000",
+        ssm: "-2px 2px 0 0 #000000",
+      },
+      padding: {
+        "10": "2.5rem",
+        "12": "3rem",
+        "14": "3.5rem",
+        "16": "4rem",
+        "18": "4.5rem",
+        "20": "5rem",
+      },
+      margin: {
+        "10": "2.5rem",
+        "12": "3rem",
+        "14": "3.5rem",
+        "16": "4rem",
+        "18": "4.5rem",
+        "20": "5rem",
+      },
+      width: {
+        "100dvh": "100dvh",
+        "100dvw": "100dvw",
+        "2px": "2px",
+        "3px": "3px",
+        "4px": "4px",
+        "5px": "5px",
       },
       keyframes: {
         "background-shine": {
@@ -154,28 +192,47 @@ const config: Config = {
   plugins: [
     require("tailwindcss-animate"),
     function ({ matchUtilities, theme }: any) {
+      // Background image utilities
       matchUtilities(
         {
           "bg-grid": (value: any) => ({
             backgroundImage: `url("${svgToDataUri(
-              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`
+              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`,
             )}")`,
           }),
           "bg-grid-small": (value: any) => ({
             backgroundImage: `url("${svgToDataUri(
-              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="8" height="8" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`
+              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="8" height="8" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`,
             )}")`,
           }),
           "bg-dot": (value: any) => ({
             backgroundImage: `url("${svgToDataUri(
-              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" fill="none"><circle fill="${value}" id="pattern-circle" cx="10" cy="10" r="1.6257413380501518"></circle></svg>`
+              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" fill="none"><circle fill="${value}" id="pattern-circle" cx="10" cy="10" r="1.6257413380501518"></circle></svg>`,
             )}")`,
           }),
         },
-        { values: flattenColorPalette(theme("backgroundColor")), type: "color" }
-      )
+        {
+          values: flattenColorPalette(theme("backgroundColor")),
+          type: "color",
+        },
+      );
+
+      // dvh utilities for height and width
+      matchUtilities(
+        {
+          "h-dvh": (value: number) => ({
+            height: `${value}dvh`,
+          }),
+          "w-dvh": (value: number) => ({
+            width: `${value}dvh`,
+          }),
+        },
+        {
+          type: "number",
+        },
+      );
     },
   ],
-}
+};
 
-export default config
+export default config;
