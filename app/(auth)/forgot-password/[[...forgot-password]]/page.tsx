@@ -7,6 +7,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogPrimaryAction,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
@@ -33,7 +34,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 const ForgotPasswordPage = () => {
   const codeLength = 6;
@@ -86,7 +87,12 @@ const ForgotPasswordPage = () => {
         } else if (result.status === "complete") {
           setActive({ session: result.createdSessionId });
           setError("");
-          router.push("/");
+          toast.success("Successfully reset. Logging you in…", {
+            autoClose: 2000,
+          });
+          setTimeout(() => {
+            router.push("/");
+          }, 2000);
         } else {
           console.log(result);
         }
@@ -94,8 +100,13 @@ const ForgotPasswordPage = () => {
       .catch((err: any) => {
         const errMsg = err.errors[0].longMessage;
         setError(errMsg);
-        toast.error(errMsg);
-        toast.info("Loading…");
+        if (errMsg === "Incorrect code") {
+          toast.error("Ahem... That's not the right code.");
+        } else if (errMsg.includes("Too many failed attempts")) {
+          toast.error("Too many failed attempts. Please try again later.");
+        } else {
+          toast.error(errMsg);
+        }
       });
   }
 
@@ -129,21 +140,25 @@ const ForgotPasswordPage = () => {
                   <X size={25} />
                 </button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="bg-salYellow text-black">
+              <AlertDialogContent className="w-[80dvw] bg-salYellow text-black">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-2xl">
-                    Are you sure?
+                    Where would you like to go?
                   </AlertDialogTitle>
                   <AlertDialogDescription className="text-black">
-                    Leaving will cancel your sign-up process and return you to
-                    the home screen.
+                    If you've remembered your password, you can login.
+                    Otherwise, you can stay here to reset your password, or go
+                    to the homepage.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => router.push("/")}>
-                    Yes, leave
+                  <AlertDialogAction onClick={() => router.push("/sign-in")}>
+                    Login
                   </AlertDialogAction>
+                  <AlertDialogPrimaryAction onClick={() => router.push("/")}>
+                    Return to homepage
+                  </AlertDialogPrimaryAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>

@@ -21,7 +21,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../../ui/sheet";
-import ModeToggle from "../mode-toggle";
 import { UserProfile } from "../user-profile";
 
 const components: { title: string; href: string; description: string }[] = [
@@ -196,7 +195,6 @@ export default function NavBar() {
 
         {/* Right Side */}
         <div className="flex items-center gap-2">
-          <ModeToggle />
           {!userId && (
             <Link href="/sign-in" prefetch={true}>
               <Button

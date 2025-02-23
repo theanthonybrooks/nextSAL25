@@ -1,8 +1,9 @@
 import type { Config } from "tailwindcss";
 
+const scrollbar = require("tailwind-scrollbar");
 const svgToDataUri = require("mini-svg-data-uri");
-
 const colors = require("tailwindcss/colors");
+
 const {
   default: flattenColorPalette,
 } = require("tailwindcss/lib/util/flattenColorPalette");
@@ -41,6 +42,10 @@ const config: Config = {
         salPink: "hsl(var(--sal-pink))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+
+        scrollBg: "hsl(var(--scrollbar-bg))",
+        thumb: "hsl(var(--scrollbar-thumb))",
+
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -191,6 +196,7 @@ const config: Config = {
   },
   plugins: [
     require("tailwindcss-animate"),
+    scrollbar,
     function ({ matchUtilities, theme }: any) {
       // Background image utilities
       matchUtilities(

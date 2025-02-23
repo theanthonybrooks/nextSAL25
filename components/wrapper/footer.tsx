@@ -38,7 +38,12 @@ export default function Footer() {
         <div className="xl:grid xl:grid-cols-2 xl:gap-8">
           {/* Links */}
           <div className="mt-5 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
-            <div className={cn("text-center md:grid md:gap-8", gridColsClass)}>
+            <div
+              className={cn(
+                "text-center md:grid md:gap-8",
+                gridColsClass ? gridColsClass : "md:grid-cols-4",
+              )}
+            >
               {Object.entries(links).map(([section, items]) => (
                 <div key={section}>
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white">

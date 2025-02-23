@@ -25,9 +25,9 @@ export const landingPageLogoText: {
   path: string;
 }[] = [
   {
-    image: "/logotext.png",
+    image: "/saltext.png",
     alt: "The Street Art List Text",
-    width: 200,
+    width: 150,
     height: 80,
     text: "The Street Art List",
     path: "/",

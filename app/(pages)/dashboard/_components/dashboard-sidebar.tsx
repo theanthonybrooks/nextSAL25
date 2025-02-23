@@ -63,7 +63,7 @@ export default function DashboardSideBar() {
   return (
     <div className="hidden h-full w-64 border-r bg-background min-[1024px]:block">
       <div className="flex h-full flex-col">
-        <div className="flex h-[3.45rem] items-center border-b px-4">
+        <div className="flex min-h-[55px] flex-shrink-0 items-center border-b px-4">
           <Link
             prefetch={true}
             className="flex items-center gap-2 font-semibold hover:cursor-pointer"
@@ -74,7 +74,7 @@ export default function DashboardSideBar() {
           </Link>
         </div>
 
-        <nav className="flex flex-1 flex-col justify-between space-y-1 p-4">
+        <nav className="flex flex-1 flex-col justify-between space-y-1 px-4 pt-4">
           <div>
             <Search
               title={"Search"}
@@ -95,13 +95,15 @@ export default function DashboardSideBar() {
                       "flex items-center gap-2 rounded-lg px-3 py-5 pl-5 text-sm transition-colors",
                       pathname === item.href
                         ? "bg-primary/10 font-bold text-primary hover:bg-primary/20"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        : "text-muted-foreground hover:bg-primary/10 hover:text-foreground",
                     )}
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}
                   </Link>
-                  {pathname !== item.href && <Separator thickness={2} />}
+                  {pathname !== item.href && (
+                    <Separator thickness={2} className="border-black/20" />
+                  )}
                 </React.Fragment>
               ))}
 
@@ -117,7 +119,7 @@ export default function DashboardSideBar() {
                         "flex cursor-pointer flex-col gap-2 rounded-lg px-3 py-2 pl-5 text-sm transition-colors",
                         pathname.includes("dashboard/" + section.sectionCat)
                           ? "font-bold"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                          : "text-muted-foreground hover:bg-primary/10 hover:text-foreground",
                       )}
                       onClick={() => handleSectionToggle(section.sectionCat!)}
                     >
@@ -162,7 +164,7 @@ export default function DashboardSideBar() {
                                   "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
                                   pathname === sectionItem.href
                                     ? "bg-primary/10 pl-3 text-primary hover:bg-primary/20"
-                                    : "pl-3 text-muted-foreground hover:bg-muted hover:text-foreground",
+                                    : "pl-3 text-muted-foreground hover:bg-primary/10 hover:text-foreground",
                                 )}
                               >
                                 <sectionItem.icon className="h-4 w-4" />

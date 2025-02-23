@@ -6,6 +6,7 @@ import { PostHogProvider } from "@/providers/posthogProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
+import { ToastContainer } from "react-toastify";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
     description:
       "The Ultimate Nextjs 15 Starter Kit for quickly building your SaaS, giving you time to focus on what really matters",
     siteId: "",
-    creator: "@rasmickyy",
+    creator: "@imanthonybrooks",
     creatorId: "",
     images: [
       "https://dwdwn8b5ye.ufs.sh/f/MD2AM9SEY8GucGJl7b5qyE7FjNDKYduLOG2QHWh3f5RgSi0c",
@@ -51,12 +52,25 @@ export default function RootLayout({
             <ConvexProvider>
               <ThemeProvider
                 attribute="class"
-                defaultTheme="dark"
+                defaultTheme="system"
                 enableSystem
                 disableTransitionOnChange
+                storageKey="theme"
               >
                 <StoreUserWrapper> {children}</StoreUserWrapper>
                 <Toaster />
+                <ToastContainer
+                  position="top-right"
+                  autoClose={5000}
+                  hideProgressBar={false}
+                  newestOnTop={false}
+                  closeOnClick={false}
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                  theme="light"
+                />
               </ThemeProvider>
             </ConvexProvider>
           </PostHogProvider>

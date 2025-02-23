@@ -56,7 +56,7 @@ export default function NavBar() {
       transition={{ duration: 0.5 }}
       className="fixed left-0 right-0 top-0 z-50 border-b bg-background backdrop-blur-md dark:bg-background"
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between p-4">
+      <div className="mx-auto flex max-w-full items-center justify-between p-4 px-5">
         {/* Mobile Logo and Navigation */}
         <div className="flex items-center gap-2 lg:hidden">
           <Dialog>
@@ -215,6 +215,7 @@ export default function NavBar() {
         <div className="flex items-center gap-2">
           {/* <ModeToggle /> */}
           <ThemeToggle />
+          {/* <Switch darkMode={true} /> */}
           {!userId && (
             <Link href="/sign-in" prefetch={true}>
               <Button

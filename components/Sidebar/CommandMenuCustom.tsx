@@ -20,6 +20,18 @@ interface CommandMenuProps {
   setSearch: React.Dispatch<React.SetStateAction<string>>;
 }
 
+const scrollbarColors =
+  "scrollbar-thumb-gray-300 scrollbar scrollbar-width-2 overflow-y-auto p-3";
+const scrollbarColorsDark =
+  "scrollbar-thumb-neutral-500 scrollbar scrollbar-width-2 overflow-y-auto p-3";
+const scrollbarSize = "max-h-60dvh";
+const scrollbarStyle =
+  "scrollbar-thumb-gray-300 scrollbar scrollbar-width-2 overflow-y-auto p-3";
+
+{
+  /* scrollbar-thumb-gray-300 max-h-[60vh] overflow-y-auto p-3 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 [&::-webkit-scrollbar]:w-2 */
+}
+
 export const CommandMenuCustom = ({
   open,
   setOpen,
@@ -125,7 +137,7 @@ export const CommandMenuCustom = ({
       onOpenChange={setOpen}
       shouldFilter={false}
       label={title}
-      className="fixed inset-0 flex items-center justify-center"
+      className="fixed inset-0 flex items-center justify-center text-black"
       onClick={() => setOpen(false)}
     >
       <AnimatePresence>
@@ -177,7 +189,7 @@ export const CommandMenuCustom = ({
                   className="relative z-10 w-full p-3 text-lg selection:italic selection:text-stone-400 placeholder:text-stone-400 focus:outline-none"
                 />
               </div>
-              <div className="max-h-[60vh] overflow-y-auto p-3 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 [&::-webkit-scrollbar]:w-2">
+              <div className="max-h-60dvh search scrollbar overflow-y-auto p-3">
                 <Command.List>
                   {Object.keys(groupedItems).length === 0 ? (
                     <Command.Empty>

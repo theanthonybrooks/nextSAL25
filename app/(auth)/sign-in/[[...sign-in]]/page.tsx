@@ -1,16 +1,5 @@
 "use client";
 // import { Icons } from "@/components/Icons";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -65,34 +54,15 @@ export default function SignInPage() {
                     <SignIn.Step name="start">
                       <div className="scrollbar-hide max-h-[100vh] overflow-y-auto">
                         <Card className="relative w-full border-2 border-black bg-white shadow-none sm:w-96">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <button
-                                className="absolute right-5 top-4 z-10 text-lg font-bold text-black hover:rounded-full hover:text-salPink focus-visible:bg-salPink"
-                                aria-label="Close modal"
-                                tabIndex={9}
-                              >
-                                <X size={25} />
-                              </button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-salYellow text-black">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle className="text-2xl">
-                                  Are you sure?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription className="text-black">
-                                  Leaving will cancel your sign-up process and
-                                  return you to the home screen.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleConfirm}>
-                                  Yes, leave
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <button
+                            className="absolute right-5 top-4 z-10 text-lg font-bold text-black hover:rounded-full hover:text-salPink focus-visible:bg-salPink"
+                            aria-label="Back to homepage"
+                            tabIndex={9}
+                            onClick={() => router.push("/")}
+                          >
+                            <X size={25} />
+                          </button>
+
                           <CardHeader className="items-center">
                             {/* <CardTitle>Sign in to Acme Co</CardTitle> */}
                             <Link
